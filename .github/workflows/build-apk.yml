@@ -1,0 +1,37 @@
+name: Build APK
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir
+        run: |
+          unzip -o *.zip || true
+          rm -f *.zip || true
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build Web
+        run: |
+          npm install
+          npm run build
+      - name: Build APK
+        run: |
+          npm i -g @bubblewrap/cli
+          npx bubblewrap init --manifest ./dist/manifest.webmanifest --directory twa
+          cd twa
+          npx bubblewrap build
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK
+          path: twa/app/build/outputs/**/*.apk
